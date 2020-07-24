@@ -1,0 +1,298 @@
+source venv/Scripts/activate && python manage.py runserver
+
+source venv/Scripts/activate
+
+Запуск сервера:
+
+python manage.py runserver
+python manage.py test
+
+python manage.py createsuperuser
+
+python manage.py makemigrations
+
+python manage.py migrate
+
+pytest
+
+
+
+Интерактивный режим:
+(venv)
+python manage.py shell
+
+from posts.models import Post, User
+me = User.objects.get(pk=3)
+
+Post.objects.filter(__contains='')
+Post.objects.filter(__exact='')
+Post.objects.filter(__in=[])
+Post.objects.filter(__gt gte lt lte=)
+Post.objects.filter(__startswith='')
+Post.objects.filter(__range=(,))
+User.objects.get(username="leo")
+
+для отображения SQL запросов:
+
+import logging
+log = logging.getLogger('django.db.backends')
+log.setLevel(logging.DEBUG)
+log.addHandler(logging.StreamHandler())
+
+Агрегирующие ф-ции:
+Post.objects.count()
+Post.objects.aggregate(Max("id"))
+Avg
+Count
+Max
+Min
+Sum
+
+Метод annotate()
+annotated_results = User.objects.annotate(posts_count = Count('posts'))
+for item in annotated_results:
+    print(f"Постов у пользователя {item.username}: {item.posts_count}")
+
+
+
+posts = Post.objects.filter(text__contains="Фокшанъ").prefetch_related('author').prefetch_related('group')
+posts = Post.objects.filter(text__contains=keyword).prefetch_related('author').prefetch_related('group')
+
+
+
+
+posts = Post.objects.filter(text__contains="Фокшанъ").select_related('author').select_related('group')
+keyword="Фокшанъ"
+posts = Post.objects.filter(text__contains=keyword).select_related('author').select_related('group').all()
+
+posts = Post.objects.select_related('author', 'group').filter(text__contains=keyword)
+
+for post in posts:
+    print(f"Автор: {post.author.get_full_name} Дата публикации: {post.pub_date} Группа: {post.group.title}")
+
+
+for post in posts:
+    print(post.author.get_full_name)
+
+for post in posts:
+    print(post.pub_date)
+
+for post in posts:
+    print(post.group)
+
+
+печать формы:
+
+>>> from django import forms
+>>> class Registration(forms.Form):
+...     firstname = forms.CharField(label="Введите имя", initial='Лев')
+...     lastname = forms.CharField(label="Введите фамилию", initial='Толстой')
+... 
+>>> form = Registration()
+# напечатаем результат, чтобы увидеть HTML-код, который выведет метод as_p()
+>>> print(form.as_p())
+
+Тесты:
+
+python manage.py test
+
+# Запускаем все тесты приложения posts
+(venv) $ python manage.py test posts
+...skip...
+
+# Запускаем все тесты приложения posts которые расположены в файле tests
+(venv) $ python manage.py test posts.tests
+...skip...
+
+# Запускаем конкретный класс unit-тестов
+(venv) $ python manage.py test posts.tests.TestStringMethods
+...skip...
+
+# Запускаем метод test_length() из класса TestStringMethods
+# из файла tests.py из директории posts
+(venv) $ python manage.py test posts.tests.TestStringMethods.test_length
+...skip...
+
+assertEqual(a, b), проверка на эквивалентность. Проверяет, что a == b
+assertNotEqual(a, b), проверка на неравенство. То же что и a != b
+assertTrue(x), проверка на истину, bool(x) is True
+assertFalse(x), проверка на ложность, bool(x) is False
+assertRaises(), проверка, что метод порождает исключение
+assertIs(a, b), проверка на тождественность, a is b
+assertIsNot(a, b), проверка на нетождественность, a is not b
+assertIsNone(x), проверка на тождественность None, x is None
+assertIsNotNone(x), проверка на нетождественность None, x is not None
+assertIn(a, b), проверка на вхождение в множество, a in b
+assertNotIn(a, b), проверка на невхождение в множество, a not in b
+assertIsInstance(a, b): является ли a экземпляром класса b, isinstance(a, b)
+assertNotIsInstance(a, b): не является ли a экземпляром класса b, not isinstance(a, b)
+
+assertRedirects(response, expected_url, status_code=302, target_status_code=200, msg_prefix='', fetch_redirect_response=True)
+: проверка предположения, что ответ view-функции содержит редирект на нужный адрес,
+заодно можно проверить HTTP-код ответа страницы и код ответа адреса, на который ожидается редирект.
+
+assertURLEqual(url1, url2, msg_prefix='')
+: проверка предположения, что два адреса эквивалентны.
+Например, /path/?x=1&y=2 — то же самое, что и /path/?y=2&x=1.
+
+assertContains(response, text, count=None, status_code=200, msg_prefix='', html=False):
+содержит ли ответ искомый текст, дополнительно можно проверить количество вхождений.
+
+assertNotContains(response, text, status_code=200, msg_prefix='', html=False):
+проверка предположения, что искомого текста нет в ответе view-функции.
+
+assertFormError(response, form, field, errors, msg_prefix=''):
+проверка на ошибки при валидации формы.
+assertTemplateUsed(response=None, template_name=None, msg_prefix='', count=None):
+проверка предположения, что определенный шаблон был применён для формирования ответа.
+
+assertTemplateNotUsed(response=None, template_name=None, msg_prefix=''):
+проверка предположения, что определенный шаблон не использовался для формирования ответа.
+
+assertHTMLEqual(html1, html2, msg=None):
+ проверка предположения, что оба переданных HTML-документа одинаковы.
+ При этом оба переданных HTML очищаются от пробельных символов,
+ а порядок следования атрибутов в тегах не считается отличием.
+
+assertHTMLNotEqual(html1, html2, msg=None):
+операция, обратная предыдущей: два HTML-документа сравниваются
+на неравенство с учетом таких же условий, как в предыдущем методе.
+
+
+тестовый клиент
+
+(venv) $ python manage.py shell
+Python 3.8.0 (default, Nov 22 2019, 23:37:58)
+[Clang 11.0.0 (clang-1100.0.33.12)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from django.test import Client
+
+# создаём клиент, эмулятор веб-браузера
+>>> c = Client()
+
+# — Браузер, сделай POST-запрос к странице логина
+# и передай значения переменных username и password!
+>>> response = c.post('/auth/login/', {'username': 'terminator', 'password': 'skynetMyLove'})
+
+# какой код вернула страница при запросе?
+>>> response.status_code
+302
+# после авторизации Django переадресует пользователя,
+# но в клиенте-эмуляторе по умолчанию переадресация запрещена, потому вернулся статус 302
+
+# разрешим переадресацию: follow=True
+>>> response = c.post('/auth/login/', {'username': 'terminator', 'password': 'skynetMyLove'}, follow=True)
+>>> response.status_code
+200 # Терминатор успешно залогинился, страница вернула код 200
+
+>>> c = Client()
+>>> c.get('/search/', {'query': 'утро', 'page': 7})
+
+>>> response = c.get('/go/', follow=True)
+>>> response.redirect_chain # показать адреса редиректа
+[('http://testserver/step1/', 302), ('http://testserver/end/', 302)]
+
+>>> c = Client()
+>>> c.login(username='terminator', password='skynetMyLove')
+True
+
+>>> c = Client()
+>>> user = User.objects.get(username="terminator")
+>>> c.force_login(user)
+True
+
+class ProfileTest(TestCase):
+        def setUp(self):
+                # создание тестового клиента — подходящая задача для функции setUp()
+                self.client = Client()
+                # создаём пользователя
+                self.user = User.objects.create_user(
+                        username="sarah", email="connor.s@skynet.com", password="12345"
+                )
+                # создаём пост от имени пользователя
+                self.post = Post.objects.create(text="You're talking about things I haven't done yet in the past tense. It's driving me crazy!", author=self.user)
+
+        def test_profile(self):
+                # формируем GET-запрос к странице сайта
+                response = self.client.get("/sarah/")
+
+                # проверяем что страница найдена
+                self.assertEqual(response.status_code, 200)
+
+                # проверяем, что при отрисовке страницы был получен список из 1 записи
+                self.assertEqual(len(response.context["posts"]), 1)
+
+                # проверяем, что объект пользователя, переданный в шаблон,
+                # соответствует пользователю, которого мы создали
+                self.assertIsInstance(response.context["profile"], User)
+                self.assertEqual(response.context["profile"].username, self.user.username)
+
+# Задание
+
+# Напишите тесты для проверки страницы сайта с тарифными планами.
+
+# Проверьте, что:
+# - главная страница доступна неавторизованному пользователю, а раздел администратора — нет
+# - переменная plans есть в контексте шаблона
+# - имя шаблона, который вызывается при рендеринге главной страницы — index.html
+# - тип переменной plans — это список, состоящий из 3-х элементов, а их тип — словарь
+# - на результирующей странице показываются названия тарифных планов и подставляется правильная тема (subject) в ссылку на кнопке "Связаться"
+# - в контекстных переменных шаблона присутствует текущий год и он же правильно появляется на странице
+
+
+class PlansPageTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def testPageCodes(self):
+        response = self.client.get('')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/admin/')
+        self.assertEqual(response.status_code, 302)
+
+    def testIndexContext(self):
+        response = self.client.get('')
+        self.assertIn('plans', response.context)
+
+    def testIndexTemplate(self):
+        response = self.client.get('')
+        self.assertEqual(response.templates[0].name, 'index.html')
+
+    def testIndexPlans(self):
+        response = self.client.get('')
+        self.assertEqual(len(response.context['plans']), 3)
+        self.assertIsInstance(response.context['plans'], dict)
+
+    def testIndexContent(self):
+        #response = self.client.get('')
+        # Проверяйте вхождение строки f"mailto:order@company.site?subject={plan['name']}"
+        #self.assertIn((f"mailto:order@company.site?subject={plan['name']}", response.content)
+        pass
+
+
+    def testContextProcessor(self):
+        #today = dt.datetime.today().year
+        #responase= self.client.get('')
+        #self.assertIn('year', response.context)
+        #self.assertIn(today, response.content)
+        pass
+
+
+
+         Изображения
+
+pip install Pillow
+pip install sorl-thumbnail
+
+
+
+
+
+
+
+
+
+
+
+
