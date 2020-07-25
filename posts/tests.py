@@ -55,7 +55,8 @@ class Hw04Test(TestCase):
         self.text_for_post_user2 = (f"Текст поста пользователя"
                                     f" user2 {self.username2}")
         self.client_user2.force_login(self.user2)
-        self.client_user2.post("/new", {"text": self.text_for_post_user2,
+        self.client_user2.post(reverse("new_post"),
+                               {"text": self.text_for_post_user2,
                                "group": self.group.id})
         self.post_id_user2 = (Post.objects.get(
             text=self.text_for_post_user2).id)
@@ -84,7 +85,8 @@ class Hw04Test(TestCase):
             self.assertContains(response, text)
 
     def test_profile_page(self):
-        response = self.client.get(f"/{self.user.username}/")
+        response = self.client.get(reverse("profile",
+                                           args=[self.user.username]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.templates[0].name, "profile.html")
         for item in [self.user.username.encode(),
@@ -133,8 +135,8 @@ class Hw04Test(TestCase):
 
     def test_user_post_edit_user2(self):
         response = self.client.get(reverse("post_edit",
-                                                   args=[self.user2,
-                                                         self.post_id_user2]))
+                                           args=[self.user2,
+                                                 self.post_id_user2]))
         self.assertRedirects(response,
                              f"/{self.user2}/{self.post_id_user2}/")
 

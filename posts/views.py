@@ -106,7 +106,7 @@ def post_edit(request, username, post_id):
                     instance=edit_post)
     if form.is_valid():
         edit_post.save()
-        return redirect(f"/{username}/{post_id}")
+        return redirect("post", username=username, post_id=post_id)
     form = PostForm(initial={
         "text": edit_post.text,
         "group": edit_post.group,
