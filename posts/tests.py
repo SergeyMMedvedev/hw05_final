@@ -72,7 +72,6 @@ class Hw04Test(TestCase):
         )
         self.client.get(reverse("profile_follow", args=[self.user3.username]))
 
-
     def check_contains(self, text):
         urls = (
             reverse("index"),
@@ -183,7 +182,6 @@ class Hw04Test(TestCase):
                     ).exists())
                     response = self.client.get(f"")
                     self.assertNotContains(response, "<img".encode())
-
 
     @override_settings(CACHES={
         "default": {
