@@ -5,7 +5,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{% block title %}The Last Social Media You'll Ever Need{% endblock %} | Yatube</title>
-    <!-- Загрузка статики -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'bootstrap/dist/css/bootstrap.min.css' %}">
     <script src="{% static 'jquery/dist/jquery.min.js' %}"></script>
@@ -14,7 +13,7 @@
 
 <body>
 
-    {% include 'nav.html' %}
+    {% include 'includes/nav.html' %}
     <main role="main" class="container">
         <h1>
             {% block header %}
@@ -22,10 +21,9 @@
             {% endblock %}
         </h1>
         {% block content %}
-        <!-- Содержимое страницы -->
         {% endblock %}
     </main>
-    {% include 'footer.html' %}
+    {% include 'includes/footer.html' %}
     {% for error in form.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error|escape }}

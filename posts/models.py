@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 
 
 User = get_user_model()
@@ -16,7 +15,7 @@ class Group(models.Model):
 
 
 class Post(models.Model):
-    text = models.TextField()
+    text = models.TextField(verbose_name="Текст")
     pub_date = models.DateTimeField("date published", auto_now_add=True)
     author = models.ForeignKey(User,
                                on_delete=models.CASCADE,
@@ -25,9 +24,13 @@ class Post(models.Model):
     group = models.ForeignKey(Group, on_delete=models.SET_NULL,
                               related_name="posts",
                               blank=True,
-                              null=True
+                              null=True,
+                              verbose_name="Группа"
                               )
-    image = models.ImageField(upload_to='posts/', blank=True, null=True)
+    image = models.ImageField(upload_to="posts/",
+                              blank=True, null=True,
+                              verbose_name="Изображение"
+                              )
 
     def __str__(self):
         return self.text
@@ -36,13 +39,13 @@ class Post(models.Model):
 class Comment(models.Model):
     post = models.ForeignKey(Post,
                              on_delete=models.CASCADE,
-                             related_name="comments"
+                             related_name="comments",
                              )
     author = models.ForeignKey(User,
                                on_delete=models.CASCADE,
                                related_name="comments"
                                )
-    text = models.TextField()
+    text = models.TextField(verbose_name="Текст комментария")
     created = models.DateTimeField("date published", auto_now_add=True)
 
     def __str__(self):
@@ -52,13 +55,17 @@ class Comment(models.Model):
 class Follow(models.Model):
     user = models.ForeignKey(User,
                              on_delete=models.CASCADE,
-                             related_name='follower',
+                             related_name="follower",
                              )
     author = models.ForeignKey(User,
                                on_delete=models.CASCADE,
-                               related_name='following',
+                               related_name="following",
                                )
 
+    class Meta:
+       unique_together = ('user', 'author')
+
+
+
     def __str__(self):
-        return f'пользователь {self.user}' \
-               f' подписан на {self.author}'
+        return f"пользователь {self.user} подписан на {self.author}"
