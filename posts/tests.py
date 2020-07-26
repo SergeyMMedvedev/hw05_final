@@ -20,6 +20,7 @@ class Hw04Test(TestCase):
     def setUp(self):
         self.client = Client()
         self.client_user2 = Client()
+        self.client_user3 = Client()
         self.client_not_log = Client()
         password = User.objects.make_random_password(length=10)
         username = get_random_string(10)
@@ -54,15 +55,15 @@ class Hw04Test(TestCase):
         )
         self.text_for_post_user2 = (f"Текст поста пользователя"
                                     f" user2 {self.username2}")
-        self.client_user2.force_login(self.user2)
-        self.client_user2.post(reverse("new_post"),
-                               {"text": self.text_for_post_user2,
-                               "group": self.group.id})
+        Post.objects.create(
+            text=self.text_for_post_user2,
+            group=self.group,
+            author=self.user2
+        )
         self.post_id_user2 = (Post.objects.get(
             text=self.text_for_post_user2).id)
-        self.client.force_login(self.user)
 
-        # пользователь user3, ни на кого не подписан, user подписан на user3
+        # пользователь user3, ни на кого не подписан
 
         self.password3 = User.objects.make_random_password(length=10)
         self.username3 = get_random_string(10)
@@ -71,7 +72,9 @@ class Hw04Test(TestCase):
             email="asd3@asd3.com",
             password=self.password3,
         )
-        self.client.get(reverse("profile_follow", args=[self.user3.username]))
+        self.client.force_login(self.user)
+        self.client_user2.force_login(self.user2)
+        self.client_user3.force_login(self.user3)
 
     def check_contains(self, text):
         urls = (
@@ -98,8 +101,9 @@ class Hw04Test(TestCase):
         response = self.client.post(reverse("new_post"),
                                     {"text": self.text_for_new_post}
                                     )
-        self.assertEqual(Post.objects.get(text=self.text_for_new_post).text,
-                         self.text_for_new_post)
+        self.assertEqual(Post.objects.filter(
+            text=self.text_for_new_post).count(),
+                         1)
         self.assertEqual(response.status_code, 302)
 
     def test_new_post_not_auth(self):
@@ -131,14 +135,16 @@ class Hw04Test(TestCase):
                                                    args=[self.user2,
                                                          self.post_id_user2]))
         self.assertRedirects(response,
-                             f"/{self.user2}/{self.post_id_user2}/")
+                             reverse("post", args=[self.user2,
+                                                   self.post_id_user2]))
 
     def test_user_post_edit_user2(self):
         response = self.client.get(reverse("post_edit",
                                            args=[self.user2,
                                                  self.post_id_user2]))
         self.assertRedirects(response,
-                             f"/{self.user2}/{self.post_id_user2}/")
+                             reverse("post", args=[self.user2,
+                                                   self.post_id_user2]))
 
     def test_code_404(self):
         response = self.client.get(f"{get_random_string(10)}")
@@ -156,7 +162,7 @@ class Hw04Test(TestCase):
                                                    args=[self.user2,
                                                          self.post_id_user2]),
                                            data=payload)
-                    response = self.client.get(f"")
+                    response = self.client.get(reverse("index"))
                     self.assertContains(response, "<img".encode())
                     image_id = Post.objects.get(
                         author=payload["author"],
@@ -182,7 +188,7 @@ class Hw04Test(TestCase):
                         text=payload["text"],
                         group=payload["group"],
                     ).exists())
-                    response = self.client.get(f"")
+                    response = self.client.get(reverse("index"))
                     self.assertNotContains(response, "<img".encode())
 
     @override_settings(CACHES={
@@ -191,11 +197,12 @@ class Hw04Test(TestCase):
         }
     })
     def test_cache_index(self):
-        self.client.get("")
-        self.client.post("/new", {"text": self.text_for_new_post})
-        response = self.client.get("")
+        self.client.get(reverse("index"))
+        self.client.post(reverse("new_post"), {"text": self.text_for_new_post})
+        response = self.client.get(reverse("index"))
         self.assertNotContains(response, self.text_for_new_post.encode())
-        response = self.client.get(f"/{self.user.username}/")
+        response = self.client.get(reverse("profile",
+                                           args=[self.user.username]))
         self.assertContains(response, self.text_for_new_post.encode())
 
     def test_auth_user_follow(self):
@@ -211,23 +218,20 @@ class Hw04Test(TestCase):
         self.assertEqual(Follow.objects.all().count(), 0)
 
     def test_follow_posts(self):
-
-        self.client.login(username=self.username2, password=self.password2)
-        self.client.post("/new",
-                         {"text": f"пост для подписчиков {self.user2}"})
-        self.client.force_login(self.user)
-        self.client.get(f"/{self.user2.username}/follow/")
-        response = self.client.get(f"/follow/")
+        self.client_user2.post(reverse("new_post"),
+                               {"text": f"пост для подписчиков {self.user2}"})
+        self.client.get(reverse("profile_follow", args=[self.user2.username]))
+        response = self.client.get(reverse("follow_index"))
         self.assertContains(response,
                             f"пост для подписчиков {self.user2}".encode())
-        self.client.force_login(self.user3)
-        response = self.client.get(f"/follow/")
+        response = self.client_user3.get(reverse("follow_index"))
         self.assertNotContains(response,
                                f"пост для подписчиков {self.user2}".encode())
 
     def test_only_auth_comments(self):
-        self.client.post(f"/{self.user2.username}/"
-                         f"{self.post_id_user2}/comment",
+        self.client.post(reverse("add_comment",
+                                 args=[self.user2.username,
+                                       self.post_id_user2]),
                          {"text": "первый коммент поста user2"})
         self.assertEqual(Comment.objects.count(), 1)
         self.assertEqual(Comment.objects.get(
@@ -235,8 +239,9 @@ class Hw04Test(TestCase):
             "первый коммент поста user2"
                          )
         self.client.logout()
-        self.client.post(f"/{self.user2.username}/"
-                         f"{self.post_id_user2}/comment",
+        self.client.post(reverse("add_comment",
+                                 args=[self.user2.username,
+                                       self.post_id_user2]),
                          {"text": "второй комментарий"})
         self.assertEqual(Comment.objects.count(), 1)
         self.assertEqual(Comment.objects.filter(

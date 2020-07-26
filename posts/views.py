@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 
 from .forms import PostForm, CommentForm
 from .models import Post, Group, Follow
@@ -61,7 +62,7 @@ def profile(request, username):
     num_of_follow = profile.follower.count()
     num_of_followers = profile.following.count()
     following = False
-    if (request.user.__str__() != 'AnonymousUser' and
+    if (request.user.is_authenticated and
             request.user.follower.filter(author=profile.id).exists()):
         following = True
     return render(request, "profile.html",
@@ -100,7 +101,7 @@ def post_view(request, username, post_id):
 
 def post_edit(request, username, post_id):
     if request.user.username != username:
-        return redirect(f"/{username}/{post_id}/")
+        return redirect(reverse("post", args=[username, post_id]))
     edit_post = get_object_or_404(Post, pk=post_id, author=request.user)
     form = PostForm(request.POST or None, files=request.FILES or None,
                     instance=edit_post)
