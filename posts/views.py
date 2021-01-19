@@ -73,7 +73,7 @@ def profile(request, username):
                    "following": following,
                    "num_of_follow": num_of_follow,
                    "num_of_followers": num_of_followers,
-                   "user": request.user.username
+                   "current_user": request.user.username
                    }
                   )
 

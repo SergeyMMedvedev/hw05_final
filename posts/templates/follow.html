@@ -10,11 +10,11 @@
   <div class="container">
     {% include "includes/menu.html" with follow=True %}
     <h1> Посты по подписке</h1>
-    {% cache 20 index_page page_number %}
+{#    {% cache 20 index_page page_number %}#}
     {% for post in page %}
       {% include "includes/post_item.html" with post=post %}
     {% endfor %}
-    {% endcache %}
+{#    {% endcache %}#}
   </div>
   {% if page.has_other_pages %}
     {% include "includes/paginator.html" with items=page paginator=paginator%}

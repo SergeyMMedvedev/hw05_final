@@ -99,7 +99,8 @@ class Hw04Test(TestCase):
 
     def test_new_post_auth(self):
         response = self.client.post(reverse("new_post"),
-                                    {"text": self.text_for_new_post}
+                                    {"text": self.text_for_new_post,
+                                     "group": self.group.id}
                                     )
         self.assertEqual(Post.objects.filter(
             text=self.text_for_new_post).count(),
