@@ -21,4 +21,3 @@ Python, Django, Bootstrap
 
 * pip install requirements.txt
 * python manage.py runserver
-
